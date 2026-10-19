@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="color-scheme" content="only light">
+  <title>雨夜 · 终章</title>
+  <style>
+    :root { color-scheme: only light; }
+
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      user-select: none; -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(to bottom, #050d23 40%, #152a4a 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: relative; width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ====== 1. 极简雨丝 ====== */
+    .rain-container {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; pointer-events: none; z-index: 1;
+    }
+    .rain-line {
+      position: absolute; background-color: #ffffff; border-radius: 1px;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-15vh); }
+      100% { transform: translateY(110vh); }
+    }
+
+    /* ====== 2. 飞鸟圆环 ====== */
+    .core {
+      position: relative; width: 90vw; max-width: 420px; aspect-ratio: 1 / 1;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10; perspective: 1200px;
+    }
+    .birds-ring {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      border-radius: 50%; animation: rotateRing 45s linear infinite;
+      transform-style: preserve-3d;
+    }
+    @keyframes rotateRing {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* 飞鸟容器 */
+    .bird {
+      position: absolute; width: 36px; height: 36px; /* 调大了尺寸适应图片 */
+      top: 50%; left: 50%; margin-top: -18px; margin-left: -18px;
+      animation: moveInOut 4s ease-in-out infinite;
+      transform-style: preserve-3d;
+      /* 为了让图片看起来是白色的飞鸟，如果原图不是白色，可以用滤镜 */
+      /* filter: brightness(0) invert(1); */ /* 如果您发现图片是黑色的，取消这行注释可强制变纯白 */
+    }
+    @keyframes moveInOut {
+      0%, 100% { transform: translateZ(0px); }
+      50% { transform: translateZ(60px); }
+    }
+
+    /* 飞鸟图片样式 */
+    .bird img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      /* 添加一点发光效果，代替原来的 box-shadow */
+      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.6));
+    }
+
+    /* ====== 3. 书本物理结构 ====== */
+    .book-wrapper {
+      position: relative; width: 65%; height: 42%; z-index: 20; cursor: pointer;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); 
+      border-radius: 8px;
+      transition: opacity 0.6s ease 1.2s; 
+      transform-style: preserve-3d;
+    }
+
+    .page-left-base {
+      position: absolute; top: 0; left: 0; width: 50%; height: 100%;
+      background-color: #1a3b8b !important;
+      border-radius: 8px 0 0 8px;
+      z-index: 1;
+    }
+
+    .page-right-base {
+      position: absolute; top: 0; right: 0; width: 50%; height: 100%;
+      background-color: #1a3b8b !important;
+      border-radius: 0 8px 8px 0;
+      z-index: 1;
+    }
+
+    .page-right-mask {
+      position: absolute; top: 0; right: 0; width: 50%; height: 100%;
+      background-color: #ffffff !important;
+      border-radius: 0 8px 8px 0;
+      z-index: 5;
+      transition: opacity 0.1s ease 0.1s; 
+    }
+
+    .page-flip {
+      position: absolute; top: 0; right: 0; width: 50%; height: 100%;
+      background-color: #ffffff !important;
+      border-radius: 0 8px 8px 0;
+      transform-origin: left center; 
+      transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1), border-radius 1.2s;
+      z-index: 10;
+      transform-style: preserve-3d;
+      border-left: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    .book-spine-line {
+      position: absolute; top: 0; left: 50%; width: 1px; height: 100%;
+      background-color: rgba(0, 0, 0, 0.1); z-index: 8;
+    }
+
+    .hint {
+      position: absolute; bottom: -35%; left: 50%; transform: translateX(-50%);
+      color: #ffffff; font-size: 14px; letter-spacing: 4px; white-space: nowrap;
+      transition: opacity 0.4s; z-index: 20;
+    }
+
+    /* === 动画触发 === */
+    .book-wrapper.open .page-flip {
+      transform: rotateY(-180deg);
+      border-radius: 8px 0 0 8px;
+    }
+
+    .book-wrapper.open .page-right-mask {
+      opacity: 0;
+    }
+
+    .book-wrapper.open {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .book-wrapper.open .hint {
+      opacity: 0;
+    }
+
+    /* ====== 4. 第二页：问答与按钮 ====== */
+    .second-page {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.8s ease 1.2s;
+      z-index: 30;
+    }
+
+    .second-page.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* 头像样式 */
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 20px;
+      /* 发光阴影 */
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 10px rgba(100, 150, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* 放大并加上引号的文字 */
+    .question-text {
+      color: #ffffff;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+
+    /* 白色边框、中间透明的按钮 */
+    .music-btn {
+      background-color: transparent;
+      border: 1px solid #ffffff;
+      color: #ffffff;
+      padding: 10px 40px;
+      font-size: 1.1rem;
+      border-radius: 30px;
+      letter-spacing: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .music-btn:active {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: scale(0.95);
+    }
+
+    audio { display: none; }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="rain-container" id="rainContainer"></div>
+
+    <div class="core">
+      <div class="birds-ring" id="birdsRing"></div>
+
+      <!-- 第一页：书本 -->
+      <div class="book-wrapper" id="bookWrapper">
+        <div class="page-left-base"></div>
+        <div class="page-right-base"></div>
+        <div class="page-right-mask"></div>
+        
+        <div class="page-flip"></div>
+        <div class="book-spine-line"></div>
+        
+        <div class="hint">- 请点击书本 -</div>
+      </div>
+
+      <!-- 第二页：头像 + 问答 + 按钮 -->
+      <div class="second-page" id="secondPage">
+        <img src="avatar2.jpg" alt="avatar" class="avatar">
+        <div class="question-text">“要听听歌吗？”</div>
+        <button class="music-btn" id="playBtn">好</button>
+      </div>
+    </div>
+
+    <!-- 音频链接，建议替换为同目录下的 bgm.mp3 保证一定能播放 -->
+    <audio id="bgMusic" loop preload="auto" playsinline webkit-playsinline>
+      <!-- <source src="bgm.mp3" type="audio/mpeg"> -->
+      <source src="http://music.163.com/song/media/outer/url?id=3408985545.mp3" type="audio/mpeg">
+    </audio>
+  </div>
+
+  <script>
+    (function() {
+      // 1. 雨丝生成
+      const rainContainer = document.getElementById('rainContainer');
+      for (let i = 0; i < 15; i++) {
+        const line = document.createElement('div');
+        line.classList.add('rain-line');
+        line.style.left = Math.random() * 100 + '%';
+        line.style.height = (20 + Math.random() * 40) + 'px';
+        line.style.width = '1px';
+        line.style.opacity = 0.15 + Math.random() * 0.2;
+        line.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
+        line.style.animationDelay = (Math.random() * 5) + 's';
+        rainContainer.appendChild(line);
+      }
+
+      // 2. 飞鸟生成 (混合读取您的 4 张图片)
+      const birdsRing = document.getElementById('birdsRing');
+      // 按您的要求排列的图片数组
+      const birdImages = ['bird.jpg', 'bird2.jpg', 'bird3.png', 'bird4.jpg'];
+      const radius = 46; 
+      
+      for (let i = 0; i < 12; i++) {
+        const birdWrapper = document.createElement('div');
+        birdWrapper.classList.add('bird');
+        
+        const angle = (i * 30) * Math.PI / 180;
+        birdWrapper.style.left = (50 + radius * Math.cos(angle)) + '%';
+        birdWrapper.style.top = (50 + radius * Math.sin(angle)) + '%';
+        // 错开动画延迟，让圆环的起伏更自然
+        birdWrapper.style.animationDelay = (i * 0.3) + 's';
+
+        // 创建 img 标签并循环分配图片
+        const img = document.createElement('img');
+        img.src = birdImages[i % birdImages.length];
+        img.alt = 'bird';
+
+        birdWrapper.appendChild(img);
+        birdsRing.appendChild(birdWrapper);
+      }
+
+      // 3. 交互逻辑
+      const bookWrapper = document.getElementById('bookWrapper');
+      const secondPage = document.getElementById('secondPage');
+      const playBtn = document.getElementById('playBtn');
+      const bgMusic = document.getElementById('bgMusic');
+      let isOpened = false;
+
+      // 点击书本翻页
+      bookWrapper.addEventListener('click', () => {
+        if (isOpened) return;
+        isOpened = true;
+
+        bookWrapper.classList.add('open');
+
+        // 等待翻页动画完毕，显示第二页
+        setTimeout(() => {
+          secondPage.classList.add('show');
+        }, 1200);
+      });
+
+      // 点击“好”按钮播放音乐
+      playBtn.addEventListener('click', () => {
+        if (bgMusic) {
+          bgMusic.volume = 0.6;
+          const playPromise = bgMusic.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              playBtn.innerText = "播放中";
+              playBtn.style.opacity = "0.5";
+              playBtn.style.pointerEvents = "none"; 
+            }).catch(err => {
+              console.warn("音乐加载失败", err);
+              playBtn.innerText = "加载失败";
+              playBtn.style.pointerEvents = "auto"; 
+            });
+          }
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
