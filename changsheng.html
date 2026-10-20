@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="color-scheme" content="only light">
+  <title>雨夜 · 终章</title>
+  <style>
+    :root { color-scheme: only light; }
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      background: linear-gradient(to bottom, #050d23 40%, #152a4a 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      font-family: "Songti SC", "SimSun", serif;
+      overflow: hidden;
+    }
+
+    /* 全局容器 */
+    .scene { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+    /* 背景层 */
+    .bg-image-layer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url('./background 2.jpg'); /* 已替换为你上传的背景图 */
+      background-size: cover; background-position: center;
+      opacity: 0; transition: opacity 1s ease; z-index: 0;
+    }
+    .bg-image-layer.show { opacity: 1; }
+
+    /* 粒子特效层 */
+    .particle-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    .particle {
+      position: absolute; width: 6px; height: 6px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%);
+      pointer-events: none; animation: burst 0.6s ease-out forwards;
+    }
+    @keyframes burst { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
+
+    /* 全局雨丝 */
+    .rain-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .rain-line { position: absolute; background-color: #ffffff; border-radius: 1px; animation: fall linear infinite; }
+    @keyframes fall { 0% { transform: translateY(-15vh); } 100% { transform: translateY(110vh); } }
+
+    /* ==================================================== */
+    /* 1. 第一页：书本与飞鸟 */
+    /* ==================================================== */
+    .core { position: relative; width: 90vw; max-width: 420px; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; z-index: 10; perspective: 2500px; transition: opacity 0.5s ease; }
+    .core.hide-birds .birds-ring { opacity: 0; pointer-events: none; }
+    .birds-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; animation: rotateRing 45s linear infinite; transform-style: preserve-3d; transition: opacity 0.5s ease; }
+    @keyframes rotateRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .bird { position: absolute; width: 56px; height: 56px; top: 50%; left: 50%; margin-top: -28px; margin-left: -28px; animation: moveInOut 4s ease-in-out infinite; transform-style: preserve-3d; }
+    @keyframes moveInOut { 0%, 100% { transform: translateZ(0px); } 50% { transform: translateZ(80px); } }
+    .bird img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7)); }
+
+    .book-wrapper { position: relative; width: 65%; height: 42%; z-index: 20; cursor: pointer; transform-style: preserve-3d; animation: floatBook 3s ease-in-out infinite alternate; }
+    @keyframes floatBook { 0% { transform: translateY(0px) rotateX(15deg) rotateZ(0deg); } 100% { transform: translateY(-15px) rotateX(15deg) rotateZ(-2deg); } }
+    .book-shadow { position: absolute; bottom: -25px; left: 5%; width: 90%; height: 20px; background: radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 70%); transform: rotateX(90deg); z-index: -1; transition: all 0.5s ease; }
+    .book-wrapper.open .book-shadow { transform: rotateX(90deg) scale(1.5); opacity: 0; }
+    .page-left { position: absolute; top: 0; left: 0; width: 50%; height: 100%; background: #ffffff; border-radius: 12px 0 0 12px; box-shadow: inset -15px 0 20px -10px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; border-right: none; z-index: 2; }
+    .page-right { position: absolute; top: 0; right: 0; width: 50%; height: 100%; background: #ffffff; border-radius: 0 12px 12px 0; box-shadow: inset 15px 0 20px -10px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; border-left: none; z-index: 1; }
+    .page-flip { position: absolute; top: 0; right: 0; width: 50%; height: 100%; background: #ffffff; border-radius: 0 12px 12px 0; border: 1px solid #e2e8f0; transform-origin: left center; transition: transform 1.4s cubic-bezier(0.3, 0.9, 0.4, 1), border-radius 1.4s, box-shadow 1.4s; z-index: 10; transform-style: preserve-3d; box-shadow: inset 5px 0 15px rgba(0,0,0,0.02), -3px 0 10px rgba(0,0,0,0.05); }
+    .book-wrapper.open .page-flip { transform: rotateY(-180deg); border-radius: 12px 0 0 12px; box-shadow: inset -5px 0 15px rgba(0,0,0,0.02), 5px 0 15px rgba(0,0,0,0.1); }
+    .book-spine-line { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.08) 100%); transform: translateX(-50%); z-index: 8; }
+    .hint { position: absolute; bottom: -40%; left: 50%; transform: translateX(-50%); color: #ffffff; font-size: 14px; letter-spacing: 4px; white-space: nowrap; transition: opacity 0.4s; z-index: 20; }
+    .book-wrapper.open { opacity: 0; pointer-events: none; transition: opacity 0.5s ease 1.4s; }
+    .book-wrapper.open .hint { opacity: 0; }
+
+    /* ==================================================== */
+    /* 2. 第二页：对话交互 */
+    /* ==================================================== */
+    .second-page { 
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+      opacity: 0; pointer-events: none; transition: opacity 0.8s ease 1.2s; z-index: 30; 
+      display: flex; flex-direction: column; align-items: center;
+      padding-top: 8%; 
+    }
+    .second-page.show { opacity: 1; pointer-events: auto; }
+
+    .chat-center-avatar {
+      width: 110px; height: 110px; aspect-ratio: 1/1;
+      border-radius: 50%;
+      object-fit: cover; border: 2px solid #fff;
+      box-shadow: 0 0 30px rgba(255,255,255,0.4);
+      background-color: #111;
+      margin-bottom: 20px;
+    }
+
+    .chat-partner-text {
+      color: #ffffff; font-size: 20px; letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.3);
+      text-align: center;
+      margin-bottom: 15px;
+      min-height: 28px;
+    }
+
+    .chat-my-text {
+      color: rgba(255, 255, 255, 0.9); 
+      font-size: 18px; letter-spacing: 1px;
+      text-align: center;
+      margin-bottom: 25px;
+      min-height: 24px; 
+      opacity: 0; transition: opacity 0.4s;
+    }
+    .chat-my-text.show { opacity: 1; }
+
+    .chat-input-wrapper {
+      width: 90%; max-width: 360px;
+      display: flex; gap: 10px; align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .chat-fake-input {
+      flex: 1; background: rgba(255,255,255,0.95); color: #000;
+      padding: 12px 20px; border-radius: 30px; font-size: 16px; font-family: "Songti SC", serif;
+      min-height: 46px; display: flex; align-items: center;
+    }
+
+    .chat-send-btn {
+      background: #1e3a8a; color: #fff; border: none;
+      padding: 12px 24px; border-radius: 30px; font-size: 15px; font-family: "Songti SC", serif;
+      letter-spacing: 2px; cursor: pointer; transition: 0.3s;
+      opacity: 0.3; pointer-events: none;
+    }
+    .chat-send-btn.active { opacity: 1; pointer-events: auto; }
+
+    .chat-options {
+      width: 85%; max-width: 340px;
+      display: none; flex-direction: column; gap: 12px;
+    }
+    .chat-options.show { display: flex; }
+    
+    .chat-opt-btn {
+      background: transparent; border: 1px solid rgba(255,255,255,0.4);
+      color: #fff; font-family: "Songti SC", serif; font-size: 15px;
+      padding: 12px; border-radius: 30px; text-align: center; letter-spacing: 2px;
+      cursor: pointer; transition: all 0.3s; backdrop-filter: blur(5px);
+    }
+    .chat-opt-btn:active { background: rgba(255,255,255,0.2); }
+
+    /* ==================================================== */
+    /* 子页面通用 */
+    /* ==================================================== */
+    .sub-page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; flex-direction: column; z-index: 40; background: rgba(5, 13, 35, 0.95); backdrop-filter: blur(10px); color: #fff; overflow-y: auto;}
+    .sub-page.active { display: flex; animation: fadeIn 0.5s ease forwards; }
+    
+    .profile-scroll-container {
+      width: 100%; min-height: 100%;
+      display: flex; flex-direction: column; align-items: center;
+      padding-top: 30px; padding-bottom: 30px; 
+    }
+
+    .back-btn { 
+      margin-top: 20px; margin-bottom: 80px; padding: 12px 50px; 
+      background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.5); 
+      border-radius: 30px; cursor: pointer; font-size: 16px; letter-spacing: 2px; 
+      backdrop-filter: blur(5px); font-family: "Songti SC", serif; flex-shrink: 0; z-index: 100;
+    }
+
+    /* ==================================================== */
+    /* 3. 个人简介页 (行星环 + 滑条信纸) */
+    /* ==================================================== */
+    .profile-system { position: relative; width: 100%; height: 380px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+    .orbit-track { position: absolute; width: 350px; height: 110px; border: 2px solid rgba(30, 58, 138, 0.8); border-radius: 50%; box-shadow: 0 0 15px rgba(30, 58, 138, 0.6), inset 0 0 15px rgba(30, 58, 138, 0.6); transform: rotate(-15deg); z-index: 5; pointer-events: none; }
+    .avatar-center { position: relative; width: 160px; height: 160px; border-radius: 50%; z-index: 10; box-shadow: 0 25px 40px rgba(0,0,0,0.8); }
+    .avatar-center img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 5px solid #ffffff; box-shadow: 0 0 25px rgba(255,255,255,0.5), 0 0 50px rgba(255,255,255,0.2); display: block; background: #111;}
+    .online-status { position: absolute; top: 15px; right: -10px; background: rgba(50,50,50,0.8); backdrop-filter: blur(5px); color: #fff; font-size: 14px; padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 20; }
+    .online-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
+    .orbit-labels { position: absolute; width: 100%; height: 100%; z-index: 15; pointer-events: none; }
+    .orbit-tag { position: absolute; left: 50%; top: 50%; background: rgba(0, 0, 0, 0.5); border: 1px solid #ffffff; color: #ffffff; font-size: 14px; padding: 6px 16px; border-radius: 20px; transform-origin: center center; transition: transform 0.05s linear, opacity 0.1s, z-index 0.1s; white-space: nowrap; backdrop-filter: blur(2px); font-family: "Songti SC", serif; }
+
+    .slider-container { width: 85%; max-width: 360px; margin: 20px 0 30px 0; display: flex; justify-content: center; }
+    .slider-track { position: relative; width: 100%; height: 50px; background: rgba(220, 220, 220, 0.8); border-radius: 25px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+    .slider-progress { position: absolute; top: 0; left: 0; height: 100%; width: 0; background: #8ab4f8; transition: width 0.1s linear; }
+    .slider-handle { position: absolute; top: 0; left: 0; width: 50px; height: 50px; cursor: grab; z-index: 10; transition: left 0.1s linear; display: flex; justify-content: center; align-items: center; }
+    .slider-handle:active { cursor: grabbing; }
+    .slider-handle img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3)); }
+    .slider-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffffff; font-size: 14px; letter-spacing: 2px; pointer-events: none; z-index: 5; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+
+    .letter-paper { width: 85%; max-width: 360px; background: #ffffff; border-radius: 12px; padding: 35px 25px; margin-bottom: 20px; background-image: linear-gradient(to bottom, transparent 95%, #f0f0f0 95%); background-size: 100% 32px; background-position: 0 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05); color: #111; position: relative; flex-shrink: 0; opacity: 0; visibility: hidden; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .letter-paper.reveal { opacity: 1; visibility: visible; transform: translateY(0); }
+    .letter-paper::before { content: ''; position: absolute; top: 20px; left: 10px; width: 10px; height: calc(100% - 40px); background-image: radial-gradient(circle, #d1d5db 3px, transparent 4px); background-size: 10px 32px; background-position: 0 10px; }
+    .letter-title { font-size: 22px; font-weight: bold; color: #111; margin-bottom: 20px; border-bottom: 2px solid #111; display: inline-block; padding-bottom: 5px; letter-spacing: 1px; }
+    .letter-section { margin-bottom: 25px; }
+    .section-subtitle { font-size: 18px; color: #111; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+    .letter-text { font-size: 16px; line-height: 32px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; color: #111; font-weight: normal; }
+    .letter-text::before { content: '•'; font-size: 22px; color: #111; line-height: 1; margin-right: -5px; }
+
+    /* ==================================================== */
+    /* 4. 查看须知页 (翻翻乐 + 渐显) */
+    /* ==================================================== */
+    .notice-title {
+      color: #ffffff; font-size: 22px; letter-spacing: 2px; text-align: center;
+      margin-top: 20px; margin-bottom: 30px; font-weight: bold;
+      text-shadow: 0 0 10px rgba(255,255,255,0.4);
+    }
+
+    .cards-wrapper { display: flex; justify-content: center; align-items: center; gap: 15px; width: 90%; max-width: 380px; margin-bottom: 40px; }
+    .flip-card { width: 80px; height: 120px; perspective: 1000px; cursor: pointer; position: relative; }
+    .flip-card:nth-child(1) { transform: translateY(-15px); }
+    .flip-card:nth-child(2) { transform: translateY(15px); }
+    .flip-card:nth-child(3) { transform: translateY(-5px); }
+
+    .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+    .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+
+    .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; border-radius: 10px; backface-visibility: hidden; box-shadow: 0 8px 15px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; }
+    .flip-card-front { background: #1e3a8a; border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 24px; }
+    .flip-card-back { background: #111; transform: rotateY(180deg); overflow: hidden; }
+    .flip-card-back img { width: 100%; height: 100%; object-fit: cover; }
+
+    .notice-text-container { width: 85%; max-width: 360px; display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; }
+    .notice-item { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; color: #ddd; font-size: 15px; line-height: 1.8; letter-spacing: 1px; border-left: 2px solid #1e3a8a; opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+    .notice-item.show { opacity: 1; transform: translateY(0); }
+
+    /* ==================================================== */
+    /* 5. 展馆页 (波浪飞鸟) */
+    /* ==================================================== */
+    .gallery-title { margin-top: 15%; font-size: 32px; letter-spacing: 6px; color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.4); z-index: 10; }
+    .gallery-space { position: relative; width: 100%; flex: 1; margin-top: 10%; overflow: hidden; }
+    
+    .bird-item {
+      position: absolute;
+      border-radius: 50%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      /* 初始用 birds1.jpg，JS里会分配不同图片 */
+      background-image: url('birds1.jpg'); 
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.6));
+      transition: transform 0.1s linear;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+    }
+    
+    .bird-item.clickable { cursor: pointer; pointer-events: auto; }
+    .bird-item.clickable:active { transform: scale(0.9); }
+    
+    /* 大鸟下的备注文字 */
+    .bird-label {
+      position: absolute; bottom: -25px; font-size: 12px;
+      color: rgba(255, 255, 255, 0.6); /* 60% 不透明度 */
+      letter-spacing: 1px; white-space: nowrap;
+    }
+    
+    .gallery-hint { position: absolute; bottom: 90px; width: 100%; text-align: center; color: #aaa; font-size: 14px; letter-spacing: 2px; z-index: 10; animation: pulse 2s infinite; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    audio { display: none; }
+  </style>
+</head>
+<body>
+  <div class="scene" id="mainScene">
+    <!-- 背景使用了你指定的 background 2.jpg -->
+    <div class="bg-image-layer" id="bgImageLayer"></div>
+    <div class="rain-container" id="rainContainer"></div>
+    <div class="particle-layer" id="particleLayer"></div>
+
+    <!-- ======== 1. 首页书本 ======== -->
+    <div class="core" id="core">
+      <div class="birds-ring" id="birdsRing"></div>
+      <div class="book-wrapper" id="bookWrapper">
+        <div class="book-shadow"></div>
+        <div class="page-left"></div>
+        <div class="page-right"></div>
+        <div class="page-flip"></div>
+        <div class="book-spine-line"></div>
+        <div class="hint">- 请点击书本 -</div>
+      </div>
+
+      <!-- ======== 2. 聊天交互页 (使用了 avatar2.jpg) ======== -->
+      <div class="second-page" id="secondPage">
+        <img src="avatar2.jpg" alt="avatar" class="chat-center-avatar">
+        <div class="chat-partner-text" id="chatPartnerText">“要听听歌吗？”</div>
+        <div class="chat-my-text" id="chatMyText"></div>
+
+        <div class="chat-input-wrapper">
+          <div class="chat-fake-input" id="fakeInput">好</div>
+          <button class="chat-send-btn" id="sendBtn" onclick="sendMsg(event)">发送</button>
+        </div>
+
+        <div class="chat-options" id="chatOptions">
+          <button class="chat-opt-btn" onclick="pickOption(event, '查看个人简介')">查看个人简介</button>
+          <button class="chat-opt-btn" onclick="pickOption(event, '查看须知')">查看须知</button>
+          <button class="chat-opt-btn" onclick="pickOption(event, '进入展馆')">进入展馆</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== 3. 个人简介页 ======== -->
+    <div class="sub-page" id="page-profile">
+      <div class="profile-scroll-container">
+        <div class="profile-system">
+          <div class="orbit-track"></div>
+          <div class="orbit-labels" id="orbitLabels"></div>
+          <div class="avatar-center">
+            <img src="avatar2.jpg" alt="avatar"> <!-- 头像 -->
+            <div class="online-status"><div class="online-dot"></div>在线</div>
+          </div>
+        </div>
+
+        <div class="slider-container">
+          <div class="slider-track" id="sliderTrack">
+            <div class="slider-progress" id="sliderProgress"></div>
+            <div class="slider-text">向右滑动解锁信纸</div>
+            <div class="slider-handle" id="sliderHandle">
+              <!-- 飞鸟滑动图还是用 birds1.jpg 暂代，你可以换成你想要的 -->
+              <img src="birds1.jpg" alt="飞鸟">
+            </div>
+          </div>
+        </div>
+
+        <div class="letter-paper" id="letterPaper">
+          <h2 class="letter-title">「关于我」</h2>
+          <div class="letter-section">
+            <div class="section-subtitle">主风格</div>
+            <div class="letter-text"><span>温虐</span><span>白话</span><span>剖析</span><span>微文艺</span></div>
+          </div>
+          <div class="letter-section">
+            <div class="section-subtitle">随机掉落</div>
+            <div class="letter-text"><span>低无</span><span>伪救赎</span></div>
+          </div>
+        </div>
+
+        <button class="back-btn" onclick="closeSubPage(event)">返回</button>
+      </div>
+    </div>
+
+    <!-- ======== 4. 查看须知页 (图片替换为 card 系列) ======== -->
+    <div class="sub-page" id="page-notice">
+      <div class="profile-scroll-container">
+        <h1 class="notice-title">「好的故事由我们共同书写」</h1>
+
+        <div class="cards-wrapper">
+          <div class="flip-card" onclick="this.classList.toggle('flipped')">
+            <div class="flip-card-inner">
+              <div class="flip-card-front">✦</div>
+              <div class="flip-card-back"><img src="card.jpg" alt="img"></div>
+            </div>
+          </div>
+          <div class="flip-card" onclick="this.classList.toggle('flipped')">
+            <div class="flip-card-inner">
+              <div class="flip-card-front">✦</div>
+              <div class="flip-card-back"><img src="card2.jpg" alt="img"></div>
+            </div>
+          </div>
+          <div class="flip-card" onclick="this.classList.toggle('flipped')">
+            <div class="flip-card-inner">
+              <div class="flip-card-front">✦</div>
+              <div class="flip-card-back"><img src="card3.jpg" alt="img"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notice-text-container">
+          <div class="notice-item">/ 非典型默认非恋人关系</div>
+          <div class="notice-item">/ 喜雷请提前说明，未告知默认无雷</div>
+          <div class="notice-item">/ 婉拒单口，半单口</div>
+          <div class="notice-item">/ 单内上下浮动 3-5min</div>
+          <div class="notice-item">/ 婉拒旁观插话、贴脸等行为</div>
+          <div class="notice-item">/ 十分钟内不满意可退换，逾时按比例退款 (包括体验到两人风格不合适，请截图举证)</div>
+          <div class="notice-item">/ 婉拒因风格不喜欢为由的差评</div>
+          <div class="notice-item">/ 进行回合制交流，会等您说完再进行回复，希望可以同样对待我</div>
+        </div>
+
+        <button class="back-btn" onclick="closeSubPage(event)">返回</button>
+      </div>
+    </div>
+
+    <!-- ======== 5. 展馆页 (波浪飞鸟) ======== -->
+    <div class="sub-page" id="page-gallery">
+      <div class="profile-scroll-container" style="padding-bottom: 0;">
+        
+        <h1 class="gallery-title">长生的展馆</h1>
+        <div class="gallery-space" id="gallerySpace"></div>
+        <div class="gallery-hint">— 滑动拨动鸟群，点击大鸟进入 —</div>
+        
+        <button class="back-btn" onclick="closeSubPage(event)" style="position: absolute; bottom: 20px; margin: 0;">返回</button>
+      </div>
+    </div>
+
+    <audio id="bgMusic" loop preload="auto" playsinline webkit-playsinline>
+      <source src="https://music.163.com/song/media/outer/url?id=3408985545.mp3" type="audio/mpeg">
+    </audio>
+  </div>
+
+  <script>
+    (function() {
+      // ======== 全局粒子效果 ========
+      window.createParticles = function(e) {
+        const x = (e && e.clientX) ? e.clientX : window.innerWidth / 2;
+        const y = (e && e.clientY) ? e.clientY : window.innerHeight / 2;
+        const particleLayer = document.getElementById('particleLayer');
+        for (let i = 0; i < 12; i++) {
+          const particle = document.createElement('div');
+          particle.classList.add('particle');
+          particle.style.left = x + 'px'; particle.style.top = y + 'px';
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 30 + Math.random() * 50;
+          particle.style.setProperty('--dx', Math.cos(angle) * distance + 'px');
+          particle.style.setProperty('--dy', Math.sin(angle) * distance + 'px');
+          const size = 3 + Math.random() * 5;
+          particle.style.width = size + 'px'; particle.style.height = size + 'px';
+          particleLayer.appendChild(particle);
+          setTimeout(() => { particle.remove(); }, 600);
+        }
+      };
+      document.addEventListener('click', (e) => { createParticles(e); });
+      document.addEventListener('touchstart', (e) => { if(e.touches.length > 0) createParticles(e.touches[0]); }, { passive: true });
+
+      // ======== 雨丝生成 ========
+      const rainContainer = document.getElementById('rainContainer');
+      for (let i = 0; i < 20; i++) {
+        const line = document.createElement('div');
+        line.classList.add('rain-line');
+        line.style.left = Math.random() * 100 + '%';
+        line.style.height = (20 + Math.random() * 40) + 'px';
+        line.style.width = '1px'; line.style.opacity = 0.15 + Math.random() * 0.2;
+        line.style.animationDuration = (0.6 + Math.random() * 0.6) + 's';
+        line.style.animationDelay = (Math.random() * 5) + 's';
+        rainContainer.appendChild(line);
+      }
+
+      // ======== 第一页 行星环 (使用 bird2, bird3, bird4) ========
+      const birdsRing = document.getElementById('birdsRing');
+      const ringBirdImages = ['bird2.jpg', 'bird3.png', 'bird4.jpg'];
+      const radius = 50; 
+      for (let i = 0; i < 12; i++) {
+        const birdWrapper = document.createElement('div');
+        birdWrapper.classList.add('bird');
+        const angle = (i * 30) * Math.PI / 180;
+        birdWrapper.style.left = (50 + radius * Math.cos(angle)) + '%';
+        birdWrapper.style.top = (50 + radius * Math.sin(angle)) + '%';
+        birdWrapper.style.animationDelay = (i * 0.3) + 's';
+        const img = document.createElement('img');
+        img.src = ringBirdImages[i % ringBirdImages.length];
+        birdWrapper.appendChild(img);
+        birdsRing.appendChild(birdWrapper);
+      }
+
+      // ======== 页面元素获取 ========
+      const bookWrapper = document.getElementById('bookWrapper');
+      const secondPage = document.getElementById('secondPage');
+      const bgMusic = document.getElementById('bgMusic');
+      const bgImageLayer = document.getElementById('bgImageLayer');
+      const core = document.getElementById('core');
+      
+      const chatPartnerText = document.getElementById('chatPartnerText');
+      const chatMyText = document.getElementById('chatMyText');
+      const chatOptions = document.getElementById('chatOptions');
+      const fakeInput = document.getElementById('fakeInput');
+      const sendBtn = document.getElementById('sendBtn');
+      
+      let isOpened = false;
+      let currentPartnerText = "“要听听歌吗？”"; 
+      let currentMyText = "";
+
+      // 1. 点开书本
+      bookWrapper.addEventListener('click', (e) => {
+        if (isOpened) return;
+        isOpened = true;
+        bookWrapper.classList.add('open');
+        setTimeout(() => {
+          bgImageLayer.classList.add('show');
+          core.classList.add('hide-birds');
+          secondPage.classList.add('show');
+        }, 1500); 
+      });
+
+      // 2. 聊天逻辑
+      window.pickOption = function(e, text) {
+        if(e) e.stopPropagation(); 
+        fakeInput.innerText = text;
+        sendBtn.classList.add('active');
+      };
+
+      window.sendMsg = function(e) {
+        if(e) e.stopPropagation(); 
+        if (!fakeInput.innerText.trim()) return;
+        let msgToSend = fakeInput.innerText;
+        
+        fakeInput.innerText = ""; 
+        sendBtn.classList.remove('active'); 
+
+        currentMyText = msgToSend;
+        chatMyText.innerText = `“${currentMyText}”`;
+        chatMyText.classList.add('show');
+
+        if (msgToSend === '好') {
+          if (bgMusic && bgMusic.paused) {
+            bgMusic.volume = 0.6; bgMusic.play().catch(err => console.log("音乐被拦截"));
+          }
+          chatOptions.classList.add('show');
+        } 
+        else if (msgToSend === '查看个人简介' || msgToSend === '查看须知' || msgToSend === '进入展馆') {
+          chatOptions.classList.remove('show');
+          
+          setTimeout(() => {
+            currentPartnerText = "“当然可以”";
+            chatPartnerText.innerText = currentPartnerText;
+            
+            setTimeout(() => {
+              if (msgToSend === '查看个人简介') {
+                document.getElementById('page-profile').classList.add('active');
+                startOrbit(); 
+                resetSlider();
+              }
+              if (msgToSend === '查看须知') {
+                document.getElementById('page-notice').classList.add('active');
+                setTimeout(initNoticeObserver, 100);
+              }
+              if (msgToSend === '进入展馆') {
+                document.getElementById('page-gallery').classList.add('active');
+                setTimeout(initGallery, 100); 
+              }
+            }, 800);
+          }, 300);
+        }
+      };
+
+      // 3. 返回逻辑
+      window.closeSubPage = function(e) {
+        if(e) e.stopPropagation(); 
+        document.querySelectorAll('.sub-page').forEach(page => page.classList.remove('active'));
+        stopOrbit(); 
+        
+        chatPartnerText.innerText = currentPartnerText;
+        chatMyText.innerText = `“${currentMyText}”`;
+        chatMyText.classList.add('show');
+        chatOptions.classList.add('show');
+      };
+
+      fakeInput.addEventListener('input', () => { sendBtn.classList.toggle('active', fakeInput.innerText.trim() !== ""); });
+      setTimeout(() => { sendBtn.classList.add('active'); }, 1000);
+
+
+      // ======== 个人简介 行星环 ========
+      const tagsData = ['付长生', '18', '女', 'T', '双子座', 'INFJ', '虐恋'];
+      const orbitLabels = document.getElementById('orbitLabels');
+      let tagElements = [];
+      let currentAngle = 0;
+      let autoRotateSpeed = 0.005; 
+      let isDragging = false;
+      let startX = 0;
+      let animationId = null;
+
+      function initOrbit() {
+        orbitLabels.innerHTML = '';
+        tagElements = [];
+        const numTags = tagsData.length;
+        tagsData.forEach((text, index) => {
+          const el = document.createElement('div');
+          el.className = 'orbit-tag';
+          el.innerText = text;
+          orbitLabels.appendChild(el);
+          tagElements.push({ el: el, index: index });
+        });
+      }
+
+      function renderOrbit() {
+        const numTags = tagsData.length;
+        const rx = 175; 
+        const ry = 55;
+        const trackAngle = -15 * Math.PI / 180; 
+
+        tagElements.forEach((item) => {
+          const angle = currentAngle + (item.index * (Math.PI * 2 / numTags));
+          const baseX = Math.cos(angle) * rx;
+          const baseY = Math.sin(angle) * ry;
+          const x = baseX * Math.cos(trackAngle) - baseY * Math.sin(trackAngle);
+          const y = baseX * Math.sin(trackAngle) + baseY * Math.cos(trackAngle);
+          const scale = 0.6 + (Math.sin(angle) + 1) * 0.25; 
+          const opacity = 0.3 + (Math.sin(angle) + 1) * 0.35; 
+
+          item.el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`;
+          item.el.style.opacity = opacity;
+          item.el.style.zIndex = Math.floor(scale * 100);
+        });
+
+        if (!isDragging) {
+          currentAngle += autoRotateSpeed; 
+        }
+        animationId = requestAnimationFrame(renderOrbit);
+      }
+
+      function startOrbit() {
+        if(!animationId) { initOrbit(); renderOrbit(); }
+      }
+      function stopOrbit() {
+        if(animationId) { cancelAnimationFrame(animationId); animationId = null; }
+      }
+
+      const profileSystem = document.querySelector('.profile-system');
+      profileSystem.addEventListener('mousedown', startDrag);
+      profileSystem.addEventListener('touchstart', startDrag, {passive: true});
+
+      function startDrag(e) {
+        isDragging = true;
+        startX = e.touches ? e.touches[0].clientX : e.clientX;
+      }
+
+      window.addEventListener('mousemove', onDrag);
+      window.addEventListener('touchmove', onDrag, {passive: true});
+
+      function onDrag(e) {
+        if (!isDragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const deltaX = clientX - startX;
+        currentAngle -= deltaX * 0.02; 
+        startX = clientX;
+      }
+
+      window.addEventListener('mouseup', endDrag);
+      window.addEventListener('touchend', endDrag);
+      function endDrag() { isDragging = false; }
+
+
+      // ======== 个人简介 互动滑条 ========
+      const sliderTrack = document.getElementById('sliderTrack');
+      const sliderProgress = document.getElementById('sliderProgress');
+      const sliderHandle = document.getElementById('sliderHandle');
+      const letterPaper = document.getElementById('letterPaper');
+
+      let isSliderDragging = false;
+      let startSliderX = 0;
+      let currentLeft = 0;
+      let trackWidth = 0;
+      let maxDrag = 0;
+
+      function initSlider() {
+        trackWidth = sliderTrack.offsetWidth;
+        maxDrag = trackWidth - sliderHandle.offsetWidth - 4; 
+      }
+      
+      function resetSlider() {
+        currentLeft = 0;
+        sliderHandle.style.left = '2px';
+        sliderProgress.style.width = '0px';
+        letterPaper.classList.remove('reveal');
+      }
+
+      window.addEventListener('resize', initSlider);
+      
+      sliderHandle.addEventListener('mousedown', startSliderDrag);
+      sliderHandle.addEventListener('touchstart', startSliderDrag, {passive: true});
+
+      function startSliderDrag(e) {
+        isSliderDragging = true;
+        startSliderX = e.touches ? e.touches[0].clientX : e.clientX;
+        initSlider(); 
+      }
+
+      window.addEventListener('mousemove', onSliderDrag);
+      window.addEventListener('touchmove', onSliderDrag, {passive: true});
+
+      function onSliderDrag(e) {
+        if (!isSliderDragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let deltaX = clientX - startSliderX;
+        
+        let newLeft = currentLeft + deltaX;
+        if (newLeft < 0) newLeft = 0;
+        if (newLeft > maxDrag) newLeft = maxDrag;
+
+        sliderHandle.style.left = `${newLeft}px`;
+        sliderProgress.style.width = `${newLeft + 28}px`; 
+
+        if (newLeft >= maxDrag - 2) {
+          isSliderDragging = false;
+          letterPaper.classList.add('reveal');
+        } else {
+          letterPaper.classList.remove('reveal');
+        }
+      }
+
+      window.addEventListener('mouseup', endSliderDrag);
+      window.addEventListener('touchend', endSliderDrag);
+      
+      function endSliderDrag() {
+        if (!isSliderDragging) return;
+        isSliderDragging = false;
+
+        if (currentLeft < maxDrag - 2) {
+          currentLeft = 0;
+          sliderHandle.style.left = '2px';
+          sliderProgress.style.width = '0px';
+          letterPaper.classList.remove('reveal');
+        } else {
+          currentLeft = maxDrag;
+          letterPaper.classList.add('reveal');
+        }
+      }
+      
+      setTimeout(initSlider, 500);
+
+
+      // ======== 须知页 上滑渐显 ========
+      function initNoticeObserver() {
+        const items = document.querySelectorAll('.notice-item');
+        items.forEach(item => item.classList.remove('show'));
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('show');
+            }
+          });
+        }, {
+          root: document.getElementById('page-notice'), 
+          threshold: 0.1 
+        });
+
+        items.forEach(item => observer.observe(item));
+      }
+
+      // ======== 展馆页 波浪飞鸟系统 ========
+      let galleryInited = false;
+      function initGallery() {
+        if (galleryInited) return;
+        galleryInited = true;
+
+        const gallerySpace = document.getElementById('gallerySpace');
+        const links = {
+          review: 'https://www.kdocs.cn/l/caTpTOpX3ZCn', 
+          cards: 'https://www.kdocs.cn/l/chZ8zENjJrUE',  
+          words: 'https://www.kdocs.cn/l/ctaRhytTXmNP'   
+        };
+        const linkKeys = [links.review, links.cards, links.words];
+        const linkLabels = ['板评', '卡类', '话术'];
+
+        let birdsData = [];
+        let offsetX = 0; 
+        let speed = 1.5; 
+        let isGalleryDragging = false;
+        let startGalleryX = 0;
+        let startGalleryOffset = 0;
+
+        const totalBirds = 18; 
+        const spacing = 120;   
+        const waveAmplitude = 60; 
+        const waveFrequency = 0.015; 
+
+        gallerySpace.innerHTML = '';
+        const spaceWidth = gallerySpace.offsetWidth;
+        const spaceHeight = gallerySpace.offsetHeight;
+
+        // 展馆里的大小飞鸟图片配置
+        const bigBirdImg = 'bird.jpg'; // 大鸟图
+        const smallBirdImgs = ['birds1.jpg', 'birds2.jpg']; // 小鸟图
+
+        for (let i = 0; i < totalBirds; i++) {
+          let size = 30; 
+          let isBig = false;
+          let url = '';
+          let labelText = '';
+          let bgImg = '';
+          
+          // 设置大鸟
+          if (i === 2 || i === 8 || i === 14) {
+            size = 80; 
+            isBig = true;
+            const index = Math.floor(i / 6);
+            url = linkKeys[index]; 
+            labelText = linkLabels[index];
+            bgImg = bigBirdImg;
+          } else {
+            // 设置小鸟
+            size = 20 + Math.random() * 20; 
+            bgImg = smallBirdImgs[Math.floor(Math.random() * smallBirdImgs.length)];
+          }
+
+          const bird = document.createElement('div');
+          bird.className = 'bird-item' + (isBig ? ' clickable' : '');
+          bird.style.width = size + 'px';
+          bird.style.height = size + 'px';
+          bird.style.backgroundImage = `url('${bgImg}')`; // 应用对应图片
+          
+          const baseX = i * spacing;
+
+          if (isBig) {
+            bird.addEventListener('click', (e) => {
+              e.stopPropagation();
+              window.location.href = url;
+            });
+            
+            const label = document.createElement('div');
+            label.className = 'bird-label';
+            label.innerText = labelText;
+            bird.appendChild(label);
+          }
+
+          gallerySpace.appendChild(bird);
+          
+          birdsData.push({
+            el: bird,
+            baseX: baseX,
+            yCenter: spaceHeight / 2, 
+            phase: i * 0.8 
+          });
+        }
+
+        function renderGallery() {
+          if (!document.getElementById('page-gallery').classList.contains('active')) return;
+
+          if (!isGalleryDragging) {
+            offsetX -= speed;
+          }
+
+          const totalWidth = totalBirds * spacing;
+
+          birdsData.forEach((bird) => {
+            let currentX = bird.baseX + offsetX;
+            currentX = ((currentX % totalWidth) + totalWidth) % totalWidth;
+
+            if (currentX > spaceWidth + 100) {
+              bird.el.style.opacity = 0;
+            } else {
+              bird.el.style.opacity = 1;
+            }
+
+            const waveY = bird.yCenter + Math.sin(currentX * waveFrequency + bird.phase) * waveAmplitude;
+            bird.el.style.transform = `translate(${currentX - 100}px, ${waveY}px)`;
+          });
+
+          requestAnimationFrame(renderGallery);
+        }
+        renderGallery();
+
+        gallerySpace.addEventListener('mousedown', (e) => {
+          isGalleryDragging = true;
+          startGalleryX = e.clientX;
+          startGalleryOffset = offsetX;
+        });
+        gallerySpace.addEventListener('touchstart', (e) => {
+          isGalleryDragging = true;
+          startGalleryX = e.touches[0].clientX;
+          startGalleryOffset = offsetX;
+        }, {passive: true});
+
+        window.addEventListener('mousemove', (e) => {
+          if (!isGalleryDragging) return;
+          offsetX = startGalleryOffset + (e.clientX - startGalleryX) * 1.5;
+        });
+        window.addEventListener('touchmove', (e) => {
+          if (!isGalleryDragging) return;
+          offsetX = startGalleryOffset + (e.touches[0].clientX - startGalleryX) * 1.5;
+        }, {passive: true});
+
+        window.addEventListener('mouseup', () => { isGalleryDragging = false; });
+        window.addEventListener('touchend', () => { isGalleryDragging = false; });
+      }
+
+    })();
+  </script>
+</body>
+  </html>
